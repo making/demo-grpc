@@ -1,0 +1,53 @@
+static_resources:
+  listeners:
+  - name: listener_grpc
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 8080 }
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          stat_prefix: ingress_http
+          codec_type: AUTO
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: service
+              domains: [ "*" ]
+              routes:
+              - match: { prefix: "/demo.HelloService" }
+                route: { cluster: backend_grpc }
+          http_filters:
+          - name: envoy.router
+  clusters:
+  - name: backend_grpc
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    dns_lookup_family: V4_ONLY
+    lb_policy: ROUND_ROBIN
+    http2_protocol_options: { }
+    load_assignment:
+      cluster_name: backend_grpc
+      endpoints:
+        lb_endpoints:
+        #        - endpoint:
+        #            address:
+        #              socket_address:
+        #                address: demo.local.maki.lol
+        #                port_value: 50051
+        #        - endpoint:
+        #            address:
+        #              socket_address:
+        #                address: demo.local.maki.lol
+        #                port_value: 50052
+        - endpoint:
+            address:
+              socket_address:
+                address: demo-grpc-server.apps.internal
+                port_value: 8080
+    health_checks:
+    - timeout: 1s
+      interval: 10s
+      unhealthy_threshold: 2
+      healthy_threshold: 2
+      tcp_health_check: { }

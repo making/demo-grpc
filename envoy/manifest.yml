@@ -1,0 +1,8 @@
+applications:
+- name: demo-grpc-proxy
+  buildpacks:
+  - binary_buildpack
+  memory: 32m
+  routes:
+  - route: cf-tcpapps.io:3398
+  command: /etc/cf-assets/envoy/envoy -c /home/vcap/app/config.yaml --base-id 100
